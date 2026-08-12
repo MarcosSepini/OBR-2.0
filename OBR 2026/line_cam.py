@@ -14,7 +14,7 @@ from constants import FRAME_WIDTH, FRAME_HEIGHT, FRAME_SHAPE, LINE_LOST, LINE_FO
 # desenhado no frame inteiro) é de longe a coisa mais cara do loop. Em uso
 # real no robô, rode SEMPRE com LINE_CAM_DEBUG=0 -- só ligue pra calibrar
 # olhando a imagem.
-DEBUG = os.environ.get("LINE_CAM_DEBUG", "0") == "1"
+DEBUG = os.environ.get("LINE_CAM_DEBUG", "0") == "0"
 CAMERA_NUM = 0
 
 # Câmera montada de cabeça para baixo (ou virada) no robô: gira o frame

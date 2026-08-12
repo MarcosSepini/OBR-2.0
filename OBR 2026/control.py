@@ -4,14 +4,14 @@ from motores import PonteHBTS7960
 import mp_manager as mgr
 from constants import FRAME_WIDTH, LINE_LOST, TEMPO_VIRADA, TEMPO_GIRO_ERRO, ERRO_LIMITE_KP
 
-RPWM_ESQ, LPWM_ESQ, REN_ESQ, LEN_ESQ = 12, 13, 5, 6
-RPWM_DIR, LPWM_DIR, REN_DIR, LEN_DIR = 18, 19, 20, 21
+RPWM_ESQ, LPWM_ESQ, REN_ESQ, LEN_ESQ = 18, 19, 20, 21
+RPWM_DIR, LPWM_DIR, REN_DIR, LEN_DIR = 12, 13, 5, 6
 
-KP = 0.6
-KP_ALTO = 1.2  # usado quando abs(erro) > ERRO_LIMITE_KP -- ajuste conforme testar
-BASE_SPEED = 60.0
+KP = 1.2
+KP_ALTO = 1.3 # usado quando abs(erro) > ERRO_LIMITE_KP -- ajuste conforme testar
+BASE_SPEED = 30.0
 CENTER_X = FRAME_WIDTH // 2
-VEL_VIRADA = 60.0
+VEL_VIRADA = 15.0
 
 # quando abs(erro) ultrapassa isso (positivo = direita, negativo =
 # esquerda), em vez da correção proporcional o robô entra numa manobra de
@@ -20,7 +20,7 @@ VEL_VIRADA = 60.0
 # Por enquanto é por TEMPO FIXO (TEMPO_GIRO_ERRO, em constants.py): não
 # fica esperando o ROI_TOPO_CENTRO reencontrar a linha (mgr.centro_topo_ok)
 # -- só gira por esse tempo e volta a seguir a linha normalmente.
-LIMITE_ERRO_GIRO = 130.0
+LIMITE_ERRO_GIRO = 125.0
 VEL_GIRO = 45.0  # intensidade do giro nas rodas (pivô no próprio eixo) -- ajuste conforme testar
 
 
@@ -38,8 +38,8 @@ def executar_virada(motor_esq, motor_dir):
     motor_esq.set_velocidade(-VEL_VIRADA)
     motor_dir.set_velocidade(VEL_VIRADA)
     t_ini_giro = time.time()
-    while (time.time() - t_ini_giro < TEMPO_VIRADA
-           and not mgr.terminate.is_set()):
+    while erro != 0: 
+        and not mgr.terminate.is_set():
         time.sleep(0.005)
     motor_esq.set_velocidade(0)
     motor_dir.set_velocidade(0)

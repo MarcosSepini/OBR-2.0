@@ -7,14 +7,14 @@ from constants import (
     ERRO_LIMITE_KP,
 )
 
-RPWM_ESQ, LPWM_ESQ, REN_ESQ, LEN_ESQ = 12, 13, 5, 6
-RPWM_DIR, LPWM_DIR, REN_DIR, LEN_DIR = 18, 19, 20, 21
+RPWM_ESQ, LPWM_ESQ, REN_ESQ, LEN_ESQ = 18, 19, 20, 21
+RPWM_DIR, LPWM_DIR, REN_DIR, LEN_DIR = 12, 13, 5, 6
 
-KP = 0.6
-KP_ALTO = 1.2  # usado quando abs(erro) > ERRO_LIMITE_KP -- ajuste conforme testar
-BASE_SPEED = 60.0
+KP = 1.2
+KP_ALTO = 1.7  # usado quando abs(erro) > ERRO_LIMITE_KP -- ajuste conforme testar
+BASE_SPEED = 30.0
 CENTER_X = FRAME_WIDTH // 2
-VEL_VIRADA = 60.0
+VEL_VIRADA = 15.0
 
 # quando abs(erro) ultrapassa isso (positivo = direita, negativo =
 # esquerda), em vez da correção proporcional o robô entra numa manobra de
@@ -23,8 +23,8 @@ VEL_VIRADA = 60.0
 # cada ciclo e só para quando ele cai até ERRO_ALVO_GIRO (ou no timeout
 # de segurança TIMEOUT_GIRO_ERRO, ambos em constants.py) -- ver
 # executar_correcao_erro_grande().
-LIMITE_ERRO_GIRO = 130.0
-VEL_GIRO = 45.0  # intensidade do giro nas rodas (pivô no próprio eixo) -- ajuste conforme testar
+LIMITE_ERRO_GIRO = 125.0
+VEL_GIRO = 15.0  # intensidade do giro nas rodas (pivô no próprio eixo) -- ajuste conforme testar
 
 
 #################################
@@ -38,8 +38,8 @@ def executar_virada(motor_esq, motor_dir):
     ela aparecer (segue no próximo ciclo do loop de controle)."""
     print(f"[control] Iniciando virada cega de {TEMPO_VIRADA}s (saindo da linha p/ esquerda)...")
 
-    motor_esq.set_velocidade(-VEL_VIRADA)
-    motor_dir.set_velocidade(VEL_VIRADA)
+    motor_esq.set_velocidade(VEL_VIRADA)
+    motor_dir.set_velocidade(-VEL_VIRADA)
     t_ini_giro = time.time()
     while (time.time() - t_ini_giro < TEMPO_VIRADA
            and not mgr.terminate.is_set()):

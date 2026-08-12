@@ -2,25 +2,28 @@ import time
 
 from motores import PonteHBTS7960
 import mp_manager as mgr
-from constants import FRAME_WIDTH, LINE_LOST, TEMPO_VIRADA, TEMPO_GIRO_ERRO, ERRO_LIMITE_KP
+from constants import (
+    FRAME_WIDTH, LINE_LOST, TEMPO_VIRADA, ERRO_ALVO_GIRO, TIMEOUT_GIRO_ERRO,
+    ERRO_LIMITE_KP,
+)
 
-RPWM_ESQ, LPWM_ESQ, REN_ESQ, LEN_ESQ = 18, 19, 20, 21
-RPWM_DIR, LPWM_DIR, REN_DIR, LEN_DIR = 12, 13, 5, 6
+RPWM_ESQ, LPWM_ESQ, REN_ESQ, LEN_ESQ = 12, 13, 5, 6
+RPWM_DIR, LPWM_DIR, REN_DIR, LEN_DIR = 18, 19, 20, 21
 
-KP = 1.2
-KP_ALTO = 1.3 # usado quando abs(erro) > ERRO_LIMITE_KP -- ajuste conforme testar
-BASE_SPEED = 30.0
+KP = 0.6
+KP_ALTO = 1.2  # usado quando abs(erro) > ERRO_LIMITE_KP -- ajuste conforme testar
+BASE_SPEED = 60.0
 CENTER_X = FRAME_WIDTH // 2
-VEL_VIRADA = 15.0
+VEL_VIRADA = 60.0
 
 # quando abs(erro) ultrapassa isso (positivo = direita, negativo =
 # esquerda), em vez da correção proporcional o robô entra numa manobra de
 # giro: pivô no próprio eixo (roda esq/dir com sinais opostos, sem
-# avançar nem recuar) pro lado do erro.
-# Por enquanto é por TEMPO FIXO (TEMPO_GIRO_ERRO, em constants.py): não
-# fica esperando o ROI_TOPO_CENTRO reencontrar a linha (mgr.centro_topo_ok)
-# -- só gira por esse tempo e volta a seguir a linha normalmente.
-LIMITE_ERRO_GIRO = 125.0
+# avançar nem recuar) pro lado do erro. O giro fica reavaliando o erro a
+# cada ciclo e só para quando ele cai até ERRO_ALVO_GIRO (ou no timeout
+# de segurança TIMEOUT_GIRO_ERRO, ambos em constants.py) -- ver
+# executar_correcao_erro_grande().
+LIMITE_ERRO_GIRO = 130.0
 VEL_GIRO = 45.0  # intensidade do giro nas rodas (pivô no próprio eixo) -- ajuste conforme testar
 
 
@@ -38,8 +41,8 @@ def executar_virada(motor_esq, motor_dir):
     motor_esq.set_velocidade(-VEL_VIRADA)
     motor_dir.set_velocidade(VEL_VIRADA)
     t_ini_giro = time.time()
-    while erro != 0: 
-        and not mgr.terminate.is_set():
+    while (time.time() - t_ini_giro < TEMPO_VIRADA
+           and not mgr.terminate.is_set()):
         time.sleep(0.005)
     motor_esq.set_velocidade(0)
     motor_dir.set_velocidade(0)
@@ -57,12 +60,14 @@ def executar_correcao_erro_grande(motor_esq, motor_dir):
     EIXO (pivô puro, sem avançar nem recuar nem um pouco) pro lado do erro
     (negativo = esquerda, positivo = direita) -- rodas com mesma
     magnitude e sinais SEMPRE opostos (uma positiva, outra negativa), sem
-    nenhum viés pra frente/trás. A direção é fixada UMA VEZ no início da
+    nenhum viés pra frente/trás. A DIREÇÃO é fixada UMA VEZ no início da
     manobra (não recalcula a cada ciclo em cima de um erro instável).
 
-    Por enquanto é por TEMPO FIXO (TEMPO_GIRO_ERRO): gira só por esse
-    tempo e depois volta a seguir a linha normalmente, sem checar se
-    achou o centro de novo."""
+    Agora NÃO é mais por tempo fixo: as rodas ficam ligadas em pivô e o
+    erro (mgr.line_angle) é reavaliado a cada ciclo -- o giro só termina
+    quando abs(erro) cai até ERRO_ALVO_GIRO (erro "zerado"). Um
+    TIMEOUT_GIRO_ERRO serve só de trava de segurança, pra não ficar
+    girando pra sempre se a linha nunca for reencontrada."""
     erro_inicial = mgr.line_angle.value
 
     if erro_inicial > 0:
@@ -70,15 +75,27 @@ def executar_correcao_erro_grande(motor_esq, motor_dir):
     else:
         vel_esq, vel_dir, lado = -VEL_GIRO, VEL_GIRO, "esquerda"
 
-    print(f"[control] Erro {erro_inicial:.0f} >= {LIMITE_ERRO_GIRO}, girando pra {lado} "
-          f"por {TEMPO_GIRO_ERRO}s...")
-
-    motor_esq.set_velocidade(vel_esq)
-    motor_dir.set_velocidade(vel_dir)
+    print(f"[control] Erro {erro_inicial:.0f} >= {LIMITE_ERRO_GIRO}, girando (pivô) pra "
+          f"{lado} até abs(erro) <= {ERRO_ALVO_GIRO:.0f} "
+          f"(timeout de segurança: {TIMEOUT_GIRO_ERRO}s)...")
 
     t_ini = time.time()
-    while (time.time() - t_ini < TEMPO_GIRO_ERRO
-           and not mgr.terminate.is_set()):
+    motivo_parada = "timeout"
+
+    while not mgr.terminate.is_set():
+        if time.time() - t_ini >= TIMEOUT_GIRO_ERRO:
+            motivo_parada = "timeout"
+            break
+
+        # reafirma a velocidade a cada ciclo (garante que o pivô continua
+        # de fato girando, e não só "seta uma vez e espera")
+        motor_esq.set_velocidade(vel_esq)
+        motor_dir.set_velocidade(vel_dir)
+
+        if mgr.line_status.value != LINE_LOST and abs(mgr.line_angle.value) <= ERRO_ALVO_GIRO:
+            motivo_parada = "erro_zerado"
+            break
+
         time.sleep(0.005)
 
     motor_esq.set_velocidade(0)
@@ -86,8 +103,13 @@ def executar_correcao_erro_grande(motor_esq, motor_dir):
 
     if mgr.terminate.is_set():
         print("[control] Giro interrompido (encerramento do programa).")
+    elif motivo_parada == "erro_zerado":
+        print(f"[control] Erro caiu pra {mgr.line_angle.value:.0f} "
+              f"(<= {ERRO_ALVO_GIRO:.0f}), giro concluído, retomando seguimento normal.")
     else:
-        print("[control] Giro concluído, retomando seguimento normal.")
+        print(f"[control] Timeout de {TIMEOUT_GIRO_ERRO}s do giro atingido sem o erro cair "
+              f"(erro atual: {mgr.line_angle.value:.0f}); parei por segurança e voltei ao "
+              f"seguimento normal.")
 
 
 def calcular_comando_motor(status, erro, center_x=CENTER_X, base=BASE_SPEED):

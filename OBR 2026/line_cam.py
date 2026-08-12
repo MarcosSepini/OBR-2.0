@@ -14,7 +14,7 @@ from constants import FRAME_WIDTH, FRAME_HEIGHT, FRAME_SHAPE, LINE_LOST, LINE_FO
 # desenhado no frame inteiro) é de longe a coisa mais cara do loop. Em uso
 # real no robô, rode SEMPRE com LINE_CAM_DEBUG=0 -- só ligue pra calibrar
 # olhando a imagem.
-DEBUG = os.environ.get("LINE_CAM_DEBUG", "0") == "0"
+DEBUG = os.environ.get("LINE_CAM_DEBUG", "0") == "1"
 CAMERA_NUM = 0
 
 # Câmera montada de cabeça para baixo (ou virada) no robô: gira o frame
@@ -567,6 +567,23 @@ def capturar_e_processar():
     global soma_erro_debug, _fps_debug, _tempo_ultimo_frame_debug
 
     shm = SharedMemory(name=mgr.shm.name)
+
+    # Bug conhecido do multiprocessing.shared_memory com fork: mesmo só
+    # ANEXANDO (create=False) a um shm que o processo principal criou, o
+    # SharedMemory.__init__ registra esse handle no resource_tracker DESTE
+    # processo também. Como todos os processos (fork) compartilham o mesmo
+    # resource_tracker de fundo, quando este processo termina o tracker
+    # acha que precisa limpar um recurso "esquecido" -- daí o aviso
+    # "resource_tracker: There appear to be N leaked shared_memory
+    # objects" no shutdown, mesmo o main.py fechando/deslinkando certinho.
+    # Só quem CRIA (mgr.py, no processo principal) deve ficar registrado;
+    # aqui, que só anexa, desregistra logo em seguida.
+    try:
+        from multiprocessing import resource_tracker
+        resource_tracker.unregister(shm._name, "shared_memory")
+    except Exception as e:
+        print(f"[line_cam] aviso: não deu pra desregistrar shm do resource_tracker: {e}")
+
     frame_buf = np.ndarray(FRAME_SHAPE, dtype=np.uint8, buffer=shm.buf)
 
     debug_ativo = DEBUG and _iniciar_debug_window()

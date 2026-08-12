@@ -38,8 +38,8 @@ def executar_virada(motor_esq, motor_dir):
     ela aparecer (segue no próximo ciclo do loop de controle)."""
     print(f"[control] Iniciando virada cega de {TEMPO_VIRADA}s (saindo da linha p/ esquerda)...")
 
-    motor_esq.set_velocidade(VEL_VIRADA)
-    motor_dir.set_velocidade(-VEL_VIRADA)
+    motor_esq.set_velocidade(-VEL_VIRADA)
+    motor_dir.set_velocidade(VEL_VIRADA)
     t_ini_giro = time.time()
     while (time.time() - t_ini_giro < TEMPO_VIRADA
            and not mgr.terminate.is_set()):

@@ -97,6 +97,56 @@ def _area_verde(mask_verde, x0, y0, x1, y1):
 
 
 # ==================================================================================================================================================================================================================
+# DEBUG VISUAL
+# ==================================================================================================================================================================================================================
+
+def _desenhar_debug(frame, fps, achou_linha, cx, area_linha, area_verde_esq, area_verde_dir):
+    debug = frame.copy()
+
+    # ROIs
+    cv2.rectangle(debug, (0, Y0_ROI_LINHA), (FRAME_WIDTH - 1, Y1_ROI_LINHA - 1), (255, 0, 0), 1)
+    cv2.rectangle(debug, (X0_ROI_RETORNO, Y0_ROI_RETORNO), (X1_ROI_RETORNO - 1, Y1_ROI_RETORNO - 1), (255, 0, 255), 1)
+    cv2.rectangle(debug, (X0_ROI_TOPO_CENTRO, Y0_ROI_TOPO_CENTRO), (X1_ROI_TOPO_CENTRO - 1, Y1_ROI_TOPO_CENTRO - 1), (0, 255, 255), 1)
+    cv2.rectangle(debug, (X0_VERDE_ESQ, Y0_VERDE), (X1_VERDE_ESQ - 1, Y1_VERDE - 1), (0, 255, 0), 1)
+    cv2.rectangle(debug, (X0_VERDE_DIR, Y0_VERDE), (X1_VERDE_DIR - 1, Y1_VERDE - 1), (0, 255, 0), 1)
+
+    # Centro da câmera
+    cv2.line(debug, (CENTER_X, 0), (CENTER_X, FRAME_HEIGHT - 1), (0, 0, 255), 1)
+
+    # Centro detectado da linha e erro visual
+    if achou_linha:
+        y_linha = FRAME_HEIGHT - 15
+        cv2.circle(debug, (cx, y_linha), 5, (0, 0, 255), -1)
+        cv2.line(debug, (CENTER_X, y_linha), (cx, y_linha), (0, 0, 255), 2)
+
+    status = "LINE_FOUND" if achou_linha else "LINE_LOST"
+    cor_status = (0, 255, 0) if achou_linha else (0, 0, 255)
+    erro = float(mgr.line_angle.value)
+    ve = area_verde_esq > AREA_MIN_VERDE
+    vd = area_verde_dir > AREA_MIN_VERDE
+
+    linhas = [
+        f"FPS: {fps:.1f}",
+        f"STATUS: {status}",
+        f"ERRO: {erro:.1f}",
+        f"AREA LINHA: {area_linha:.0f}/{AREA_MIN_LINHA}",
+        f"VERDE E: {area_verde_esq} {'OK' if ve else '-'}",
+        f"VERDE D: {area_verde_dir} {'OK' if vd else '-'}",
+        f"VIRADA: {'ON' if mgr.virar_flag.value else 'OFF'}",
+        f"TOPO: {'OK' if mgr.centro_topo_ok.value else '-'}",
+        f"RETORNO: {'OK' if mgr.retorno_linha_ok.value else '-'}",
+    ]
+
+    y = 14
+    for i, texto in enumerate(linhas):
+        cv2.putText(debug, texto, (4, y), cv2.FONT_HERSHEY_SIMPLEX, 0.38, cor_status if i == 1 else (255,255,255), 1, cv2.LINE_AA)
+        y += 14
+
+    cv2.putText(debug, "AZUL=linha | VERDE=verde | MAGENTA=retorno | AMARELO=topo", (4, FRAME_HEIGHT - 4), cv2.FONT_HERSHEY_SIMPLEX, 0.28, (255,255,255), 1, cv2.LINE_AA)
+    return debug
+
+
+# ==================================================================================================================================================================================================================
 # LOOP PRINCIPAL (roda no processo "line_cam", ver main.py)
 # ==================================================================================================================================================================================================================
 
@@ -115,6 +165,10 @@ def capturar_e_processar():
     # não depende disso)
     shm_buf = np.ndarray((FRAME_HEIGHT, FRAME_WIDTH, 3), dtype=np.uint8, buffer=mgr.shm.buf)
 
+    fps_t0 = time.perf_counter()
+    fps_frames = 0
+    fps = 0.0
+
     try:
         while not mgr.terminate.is_set():
             frame = picam2.capture_array()
@@ -130,7 +184,7 @@ def capturar_e_processar():
             _, mask_preto = cv2.threshold(gray, LIMIAR_PRETO, 255, cv2.THRESH_BINARY_INV)
 
             # --- linha principal -> erro pro controle P (mgr.line_angle) ---
-            achou_linha, cx, _, _ = _centro_de_massa(
+            achou_linha, cx, _, area_linha = _centro_de_massa(
                 mask_preto, 0, Y0_ROI_LINHA, FRAME_WIDTH, Y1_ROI_LINHA, AREA_MIN_LINHA
             )
             if achou_linha:
@@ -166,8 +220,25 @@ def capturar_e_processar():
                 shm_buf[:] = frame
                 mgr.novo_frame_flag.value = 1
 
+            # --- DEBUG VISUAL ---
+            fps_frames += 1
+            agora = time.perf_counter()
+            dt = agora - fps_t0
+            if dt >= 0.5:
+                fps = fps_frames / dt
+                fps_frames = 0
+                fps_t0 = agora
+
+            debug_frame = _desenhar_debug(frame, fps, achou_linha, cx, area_linha, area_verde_esq, area_verde_dir)
+            cv2.imshow("Line Cam Debug - Q para sair", debug_frame)
+
+            if cv2.waitKey(1) & 0xFF == ord("q"):
+                mgr.terminate.set()
+                break
+
             time.sleep(INTERVALO_CICLO)
     finally:
+        cv2.destroyAllWindows()
         picam2.stop()
         mgr.camera_ok.value = 0
         print("[line_cam] Câmera parada.")

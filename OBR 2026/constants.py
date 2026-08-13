@@ -18,7 +18,7 @@ TEMPO_VIRADA = 0.6
 # segurança -- se por algum motivo o erro nunca cair (linha sumiu, etc.)
 # o giro para sozinho depois desse tempo, em vez de girar pra sempre.
 ERRO_ALVO_GIRO = 15.0  # abaixo disso (em px de erro), considera "zerado" e para o giro
-TIMEOUT_GIRO_ERRO = 3.0  # segundos -- trava de segurança, calibre conforme testar
+TIMEOUT_GIRO_ERRO = 1.2  # segundos -- trava de segurança, calibre conforme testar
 
 # quando o erro da linha (graus) ultrapassa este limite, positivo ou
 # negativo, a correção usa um KP maior (curva mais fechada)

@@ -10,8 +10,8 @@ from constants import (
 RPWM_ESQ, LPWM_ESQ, REN_ESQ, LEN_ESQ = 18, 19, 20, 21
 RPWM_DIR, LPWM_DIR, REN_DIR, LEN_DIR = 12, 13, 5, 6
 
-KP = 1.2
-KP_ALTO = 1.7  # usado quando abs(erro) > ERRO_LIMITE_KP -- ajuste conforme testar
+KP = 2
+KP_ALTO = 2.7 # usado quando abs(erro) > ERRO_LIMITE_KP -- ajuste conforme testar
 BASE_SPEED = 30.0
 CENTER_X = FRAME_WIDTH // 2
 VEL_VIRADA = 15.0

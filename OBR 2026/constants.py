@@ -18,7 +18,6 @@ TEMPO_VIRADA = 0.6
 # VEL_GIRO até dar a volta desejada.
 TEMPO_GIRO_ERRO = 1.2
 
-<<<<<<< HEAD
 
 GREEN_INT_TO_STR = {
     GREEN_NONE: "NONE",
@@ -74,8 +73,7 @@ TIMEOUT_PERDA_LINHA_SEGURANCA = 2.5 # Timeout de segurança sem linha antes de p
 # negativo, a correção usa um KP maior (curva mais fechada)
 ERRO_LIMITE_KP = 60.0
 
-=======
 # quando o erro da linha (graus) ultrapassa este limite, positivo ou
 # negativo, a correção usa um KP maior (curva mais fechada)
 ERRO_LIMITE_KP = 90.0
->>>>>>> origin/main
+

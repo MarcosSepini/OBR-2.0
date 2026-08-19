@@ -11,7 +11,6 @@ def main():
     if get_start_method(allow_none=True) != "fork":
         set_start_method("fork")
 
-<<<<<<< HEAD
     # Configuração de multiprocessamento compatível com Linux e Windows
     if sys.platform != "win32":
         try:
@@ -42,13 +41,13 @@ def main():
     processos = [proc_camera, proc_motores]
 
     print("[main] Iniciando processos...")
-=======
+
     proc_camera = Process(target=capturar_e_processar, name="line_cam")
     proc_motores = Process(target=loop_controle, name="control")
     proc_led = Process(target=led_branco_loop, name="led")
 
     processos = [proc_camera, proc_motores, proc_led]
->>>>>>> origin/main
+
     for p in processos:
         p.start()
 

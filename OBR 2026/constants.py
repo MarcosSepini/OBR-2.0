@@ -1,78 +1,24 @@
-"""
-Constantes globais para o robô seguidor de linha - OBR 2026.
-Centraliza calibrações de visão/cores, pinos de motores, ganhos de PID e tratamento de falhas/GAP.
-"""
+FRAME_WIDTH = 320 #LARGURA
+FRAME_HEIGHT = 200 #ALTURA
+FRAME_SHAPE = (FRAME_HEIGHT, FRAME_WIDTH, 3)
+FRAME_NBYTES = FRAME_HEIGHT * FRAME_WIDTH * 3
 
-# ==========================================
-# CONFIGURAÇÕES DE CÂMERA E IMAGEM
-# ==========================================
-FRAME_WIDTH = 320
-FRAME_HEIGHT = 240
-CENTER_X = FRAME_WIDTH // 2
-CENTER_Y = FRAME_HEIGHT // 2
-
-# ==========================================
-# LIMIARES DE VISÃO E CORES (CALIBRAÇÃO DE PISTA)
-# ==========================================
-# Limiares de preto (grayscale: 0 a 255)
-LIMIAR_PRETO_BASE = 100         # Limiar em iluminação normal
-LIMIAR_PRETO_BRILHO = 150       # Limiar em regiões periféricas com reflexo
-
-# Faixas de cor Verde (HSV: H=0-180, S=0-255, V=0-255)
-HSV_VERDE_MIN = (35, 60, 50)
-HSV_VERDE_MAX = (90, 255, 255)
-
-# Faixas de cor Vermelha (HSV: dois intervalos para cobrir o vermelho no OpenCV)
-HSV_VERMELHO_MIN1 = (0, 90, 60)
-HSV_VERMELHO_MAX1 = (8, 255, 255)
-HSV_VERMELHO_MIN2 = (165, 90, 60)
-HSV_VERMELHO_MAX2 = (180, 255, 255)
-FRACAO_MIN_VERMELHO = 0.08      # Fração do frame com pixels vermelhos para disparar parada
-
-# Áreas mínimas de contorno (em pixels para resolução 320x240)
-AREA_MIN_LINHA_PRETA = 500
-AREA_MIN_MARCADOR_VERDE = 300
-LIMIAR_ADJACENCIA_VERDE = 0.10  # Densidade mínima de preto adjacente para validar verde
-
-# ==========================================
-# PARÂMETROS DE PROCESSAMENTO MORFOLÓGICO
-# ==========================================
-BLUR_KSIZE_PRETO = 5            # Tamanho do filtro mediano
-MORPH_KSIZE = (5, 5)            # Kernel retangular para abertura e fechamento
-MORPH_OPEN_ITERS = 1            # Iterações de abertura (elimina ruídos pontuais)
-MORPH_CLOSE_ITERS = 2           # Iterações de fechamento (preenche falhas na linha)
-
-# ==========================================
-# PINOS DOS MOTORES (PONTE BTS7960)
-# ==========================================
-RPWM_ESQ, LPWM_ESQ, REN_ESQ, LEN_ESQ = 18, 19, 20, 21
-RPWM_DIR, LPWM_DIR, REN_DIR, LEN_DIR = 12, 13, 5, 6
-
-# ==========================================
-# STATUS DA LINHA
-# ==========================================
 LINE_LOST = 0
-LINE_TRACKING = 1
-LINE_GAP = 2
-RED_STOP = 3
+LINE_FOUND = 1
 
-# ==========================================
-# SINAIS VERDES
-# ==========================================
-GREEN_NONE = 0
-GREEN_LEFT = 1
-GREEN_RIGHT = 2
-GREEN_DOUBLE = 3
-GREEN_APPROACH = 4
+# tempo (em segundos) da virada "cega" para sair da linha pela esquerda.
+# Sem giroscópio pra medir o ângulo, a virada agora é por tempo fixo --
+# calibre na prática cronometrando o robô girando ~90 graus na VEL_VIRADA.
+TEMPO_VIRADA = 0.6
 
-GREEN_STR_TO_INT = {
-    "NONE": GREEN_NONE,
-    "LEFT": GREEN_LEFT,
-    "RIGHT": GREEN_RIGHT,
-    "DOUBLE": GREEN_DOUBLE,
-    "APPROACH": GREEN_APPROACH,
-}
+# tempo (em segundos) do giro no próprio eixo quando o erro fica muito
+# grande (abs(erro) >= LIMITE_ERRO_GIRO, ver control.py). Por enquanto
+# também é por tempo fixo, igual TEMPO_VIRADA (antes girava até o
+# ROI_TOPO_CENTRO reencontrar a linha) -- calibre cronometrando o giro na
+# VEL_GIRO até dar a volta desejada.
+TEMPO_GIRO_ERRO = 1.2
 
+<<<<<<< HEAD
 
 GREEN_INT_TO_STR = {
     GREEN_NONE: "NONE",
@@ -128,3 +74,8 @@ TIMEOUT_PERDA_LINHA_SEGURANCA = 2.5 # Timeout de segurança sem linha antes de p
 # negativo, a correção usa um KP maior (curva mais fechada)
 ERRO_LIMITE_KP = 60.0
 
+=======
+# quando o erro da linha (graus) ultrapassa este limite, positivo ou
+# negativo, a correção usa um KP maior (curva mais fechada)
+ERRO_LIMITE_KP = 90.0
+>>>>>>> origin/main

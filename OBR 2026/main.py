@@ -1,10 +1,3 @@
-"""
-Ponto de entrada principal para o robô seguidor de linha - OBR 2026.
-Inicia e gerencia os processos concorrentes de visão computacional (line_cam)
-e controle de motores (control).
-"""
-
-import sys
 import time
 from multiprocessing import set_start_method, get_start_method, Process
 
@@ -15,10 +8,10 @@ from led_branco import led_branco_loop
 
 
 def main():
-    print("=" * 60)
-    print("  OBR 2026 - Robô Seguidor de Linha")
-    print("=" * 60)
+    if get_start_method(allow_none=True) != "fork":
+        set_start_method("fork")
 
+<<<<<<< HEAD
     # Configuração de multiprocessamento compatível com Linux e Windows
     if sys.platform != "win32":
         try:
@@ -49,31 +42,32 @@ def main():
     processos = [proc_camera, proc_motores]
 
     print("[main] Iniciando processos...")
+=======
+    proc_camera = Process(target=capturar_e_processar, name="line_cam")
+    proc_motores = Process(target=loop_controle, name="control")
+    proc_led = Process(target=led_branco_loop, name="led")
+
+    processos = [proc_camera, proc_motores, proc_led]
+>>>>>>> origin/main
     for p in processos:
         p.start()
-        print(f"[main] Processo '{p.name}' iniciado com PID {p.pid}.")
 
     try:
-        while not mgr.terminate.is_set() and all(p.is_alive() for p in processos):
-            time.sleep(0.05)
-
+        while all(p.is_alive() for p in processos):
+            time.sleep(0.01)
     except KeyboardInterrupt:
-        print("\n[main] Sinal de interrupção recebido (Ctrl+C). Encerrando...")
-
+        print("Encerrando (Ctrl+C)...")
     finally:
         mgr.terminate.set()
 
-        print("[main] Aguardando encerramento dos processos...")
         for p in processos:
-            p.join(timeout=1.5)
-
+            p.join(timeout=2)
         for p in processos:
             if p.is_alive():
-                print(f"[main] Forçando encerramento de '{p.name}'...")
                 p.terminate()
-                p.join(timeout=0.5)
 
-        print("[main] Todos os processos foram finalizados com segurança.")
+        mgr.shm.close()
+        mgr.shm.unlink()
 
 
 if __name__ == "__main__":

@@ -1,8 +1,4 @@
-"""
-Módulo de controle dos motores BTS7960 para o robô seguidor de linha - OBR 2026.
-Implementa controlador PID avançado com modulação dinâmica de velocidade base,
-contra-rotação proporcional para curvas de 90° e pivô proporcional desacelerado.
-"""
+
 
 import time
 import numpy as np
@@ -148,6 +144,23 @@ class ControladorPID:
         vel_dir = max(-100.0, min(100.0, vel_dir))
 
         return vel_esq, vel_dir
+
+KP = 1.2
+KP_ALTO = 2.0  # usado quando abs(erro) > ERRO_LIMITE_KP -- ajuste conforme testar
+BASE_SPEED = 30.0
+CENTER_X = FRAME_WIDTH // 2
+VEL_VIRADA = 30.0
+
+# quando abs(erro) ultrapassa isso (positivo = direita, negativo =
+# esquerda), em vez da correção proporcional o robô entra numa manobra de
+# giro: pivô no próprio eixo (roda esq/dir com sinais opostos, sem
+# avançar nem recuar) pro lado do erro. O giro fica reavaliando o erro a
+# cada ciclo e só para quando ele cai até ERRO_ALVO_GIRO (ou no timeout
+# de segurança TIMEOUT_GIRO_ERRO, ambos em constants.py) -- ver
+# executar_correcao_erro_grande().
+LIMITE_ERRO_GIRO = 127.0
+VEL_GIRO = 30.0  # intensidade do giro nas rodas (pivô no próprio eixo) -- ajuste conforme testar
+
 
 
 # Instância global para chamadas diretas ou testes

@@ -43,13 +43,10 @@ def main():
         daemon=True
     )  
     
-    proc_led = Process(
-        target=loop_controle,
-        name="control",
-        daemon=True
-    )
+ 
 
-    processos = [proc_camera, proc_motores, proc_led]
+
+    processos = [proc_camera, proc_motores]
 
     print("[main] Iniciando processos...")
     for p in processos:

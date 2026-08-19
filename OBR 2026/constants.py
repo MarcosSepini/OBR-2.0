@@ -73,6 +73,7 @@ GREEN_STR_TO_INT = {
     "APPROACH": GREEN_APPROACH,
 }
 
+
 GREEN_INT_TO_STR = {
     GREEN_NONE: "NONE",
     GREEN_LEFT: "LEFT",
@@ -122,3 +123,8 @@ COOLDOWN_DUPLO_VERDE = 0.6
 VEL_AVANCO_GAP = 24.5           # Velocidade moderada em linha reta durante falhas na linha (GAP)
 TIMEOUT_GAP_BUSCA = 1.6         # Tempo máximo insistindo em linha reta antes de busca ativa
 TIMEOUT_PERDA_LINHA_SEGURANCA = 2.5 # Timeout de segurança sem linha antes de parar motores
+
+# quando o erro da linha (graus) ultrapassa este limite, positivo ou
+# negativo, a correção usa um KP maior (curva mais fechada)
+ERRO_LIMITE_KP = 60.0
+

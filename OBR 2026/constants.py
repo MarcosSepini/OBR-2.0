@@ -21,3 +21,5 @@ TEMPO_GIRO_ERRO = 1.2
 # quando o erro da linha (graus) ultrapassa este limite, positivo ou
 # negativo, a correção usa um KP maior (curva mais fechada)
 ERRO_LIMITE_KP = 90.0
+ERRO_ALVO_GIRO = 10
+TIMEOUT_GIRO_ERRO = 3

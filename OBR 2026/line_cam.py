@@ -14,7 +14,7 @@ from constants import FRAME_WIDTH, FRAME_HEIGHT, FRAME_SHAPE, LINE_LOST, LINE_FO
 # desenhado no frame inteiro) é de longe a coisa mais cara do loop. Em uso
 # real no robô, rode SEMPRE com LINE_CAM_DEBUG=0 -- só ligue pra calibrar
 # olhando a imagem.
-DEBUG = os.environ.get("LINE_CAM_DEBUG", "0") == "1"
+DEBUG = os.environ.get("LINE_CAM_DEBUG", "0") == "0"
 CAMERA_NUM = 0
 
 # Câmera montada de cabeça para baixo (ou virada) no robô: gira o frame
@@ -23,8 +23,8 @@ CAMERA_NUM = 0
 # ROTACIONAR_CAMERA = False.
 ROTACIONAR_CAMERA = True
 
-BLACK_THRESH = 20
-MIN_CONTOUR_AREA = 2500
+BLACK_THRESH = 125
+MIN_CONTOUR_AREA = 0
 
 # a maior ROI de verde (ROI_ESQ) tem 60x200 = 12000 px no total -- o valor
 # antigo (8000000) era maior que isso, ou seja, nunca validava contorno

@@ -11,6 +11,7 @@ from multiprocessing import set_start_method, get_start_method, Process
 import mp_manager as mgr
 from line_cam import capturar_e_processar
 from control import loop_controle
+from led_branco import led_branco_loop
 
 
 def main():
@@ -37,12 +38,18 @@ def main():
 
     # Processo de Controle de Motores
     proc_motores = Process(
+        target=led_branco_loop,
+        name="led",
+        daemon=True
+    )  
+    
+    proc_led = Process(
         target=loop_controle,
         name="control",
         daemon=True
     )
 
-    processos = [proc_camera, proc_motores]
+    processos = [proc_camera, proc_motores, proc_led]
 
     print("[main] Iniciando processos...")
     for p in processos:

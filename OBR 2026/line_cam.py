@@ -595,11 +595,28 @@ def capturar_e_processar():
             buffer_count=6,  # mais buffers em voo = menos frames perdidos/travados esperando o consumidor
         )
         picam2.configure(config)
-        
-        picam2.set_controls({
-			"FrameDurationLimits": (8000, 33333),
-            "ScalerCrop": (0, 0, 3264, 2464)
-            })
+
+        # ScalerCrop = área do sensor que é lida pra formar a imagem. Se
+        # for menor que o sensor inteiro, o resto do pipeline (ISP) estica
+        # esse recorte até preencher o "main" configurado acima -- ou seja,
+        # zoom digital, mesmo sem ninguém pedir zoom.
+        #
+        # ANTES o crop vinha hardcoded em (0, 0, 3264, 2464). Esse número é
+        # só um "chute" de resolução de sensor -- se a câmera real (V2/HQ/
+        # outro módulo) tiver PixelArraySize diferente, esse crop fica
+        # MENOR que o sensor inteiro e já entra com zoom digital residual,
+        # mesmo "sem querer". Agora o crop é lido diretamente das
+        # propriedades da câmera (PixelArraySize), então cobre o sensor
+        # 100% -- zoom digital 1x de verdade, e a resolução de saída
+        # continua sendo (FRAME_WIDTH, FRAME_HEIGHT) normalmente, só que
+        # como se tivesse sido capturada a partir do sensor inteiro (maior
+        # campo de visão) e depois reduzida, em vez de já vir cortada.
+        try:
+            largura_sensor, altura_sensor = picam2.camera_properties["PixelArraySize"]
+            picam2.set_controls({"ScalerCrop": (0, 0, largura_sensor, altura_sensor)})
+            print(f"[line_cam] ScalerCrop forçado pro sensor inteiro: {largura_sensor}x{altura_sensor} (zoom digital removido)")
+        except Exception as e:
+            print(f"[line_cam] aviso: não deu pra ler PixelArraySize / ajustar ScalerCrop: {e}")
 
         try:
             picam2.set_controls({"FrameDurationLimits": (8000, 33333)})

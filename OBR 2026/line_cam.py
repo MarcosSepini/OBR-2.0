@@ -592,14 +592,15 @@ def capturar_e_processar():
         picam2 = Picamera2(camera_num=CAMERA_NUM)
         config = picam2.create_video_configuration(
             main={"size": (FRAME_WIDTH, FRAME_HEIGHT), "format": "RGB888"},
-            buffer_count=4,  # mais buffers em voo = menos frames perdidos/travados esperando o consumidor
+            buffer_count=6,  # mais buffers em voo = menos frames perdidos/travados esperando o consumidor
         )
         picam2.configure(config)
-        # Sobe o teto de FPS que o sensor pode entregar (em microssegundos:
-        # duração mínima/máxima de frame). 8000us -> até ~125 fps; ajuste o
-        # limite inferior conforme o sensor/iluminação permitirem sem ficar
-        # escuro/ruidoso demais. Sem isso o picamera2 costuma ficar preso
-        # numa taxa bem mais conservadora por padrão.
+        
+        picam2.set_controls({
+			"FrameDurationLimits": (8000, 33333),
+            "ScalerCrop": (0, 0, 3264, 2464)
+            })
+
         try:
             picam2.set_controls({"FrameDurationLimits": (8000, 33333)})
         except Exception as e:

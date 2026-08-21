@@ -23,14 +23,14 @@ CAMERA_NUM = 0
 # ROTACIONAR_CAMERA = False.
 ROTACIONAR_CAMERA = True
 
-BLACK_THRESH = 125
+BLACK_THRESH = 155
 MIN_CONTOUR_AREA = 0
 
 # a maior ROI de verde (ROI_ESQ) tem 60x200 = 12000 px no total -- o valor
 # antigo (8000000) era maior que isso, ou seja, nunca validava contorno
 # nenhum. Comece com isto e calibre olhando o debug (LINE_CAM_DEBUG=1) com
 # a área real das manchas de ruído vs. da fita/marcação verde de verdade.
-MIN_CONTOUR_AREA_VERDE = 15000000000
+MIN_CONTOUR_AREA_VERDE = 700
 
 # verde em HSV (H: 0-179 no OpenCV) -- bem mais robusto à luz que threshold em RGB.
 # S e V mínimos foram subidos (eram 40/40): em ambiente escuro o ganho

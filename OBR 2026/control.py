@@ -10,11 +10,11 @@ from constants import (
 RPWM_ESQ, LPWM_ESQ, REN_ESQ, LEN_ESQ = 12, 13, 5, 6
 RPWM_DIR, LPWM_DIR, REN_DIR, LEN_DIR = 18, 19, 20, 21
 
-KP = 0.8
-KP_ALTO = 1.2 # usado quando abs(erro) > ERRO_LIMITE_KP -- ajuste conforme testar
+KP = 1.2
+KP_ALTO =1.5 # usado quando abs(erro) > ERRO_LIMITE_KP -- ajuste conforme testar
 BASE_SPEED = 20.0
 CENTER_X = FRAME_WIDTH // 2
-VEL_VIRADA = 20.0
+VEL_VIRADA = 30
 
 # quando abs(erro) ultrapassa isso (positivo = direita, negativo =
 # esquerda), em vez da correção proporcional o robô entra numa manobra de
@@ -23,8 +23,8 @@ VEL_VIRADA = 20.0
 # cada ciclo e só para quando ele cai até ERRO_ALVO_GIRO (ou no timeout
 # de segurança TIMEOUT_GIRO_ERRO, ambos em constants.py) -- ver
 # executar_correcao_erro_grande().
-LIMITE_ERRO_GIRO = 120.0
-VEL_GIRO = 45.0  # intensidade do giro nas rodas (pivô no próprio eixo) -- ajuste conforme testar
+LIMITE_ERRO_GIRO = 125.0
+VEL_GIRO = 30  # intensidade do giro nas rodas (pivô no próprio eixo) -- ajuste conforme testar
 
 
 #################################
@@ -71,9 +71,9 @@ def executar_correcao_erro_grande(motor_esq, motor_dir):
     erro_inicial = mgr.line_angle.value
 
     if erro_inicial > 0:
-        vel_esq, vel_dir, lado = VEL_GIRO, -VEL_GIRO, "direita"
+        vel_esq, vel_dir, lado = VEL_GIRO, 0, "direita"
     else:
-        vel_esq, vel_dir, lado = -VEL_GIRO, VEL_GIRO, "esquerda"
+        vel_esq, vel_dir, lado = 0, VEL_GIRO, "esquerda"
 
     print(f"[control] Erro {erro_inicial:.0f} >= {LIMITE_ERRO_GIRO}, girando (pivô) pra "
           f"{lado} até abs(erro) <= {ERRO_ALVO_GIRO:.0f} "
